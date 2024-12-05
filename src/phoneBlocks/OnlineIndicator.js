@@ -1,60 +1,49 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import clsx from 'clsx';
-import { colors, makeStyles } from '@material-ui/core';
+import { styled } from '@mui/material/styles';
 
-const useStyles = makeStyles((theme) => ({
-  root: {
-    display: 'inline-block',
-    borderRadius: '50%',
-    flexGrow: 0,
-    flexShrink: 0
-  },
-  small: {
-    height: theme.spacing(1),
-    width: theme.spacing(1)
-  },
-  medium: {
-    height: theme.spacing(2),
-    width: theme.spacing(2)
-  },
-  large: {
-    height: theme.spacing(3),
-    width: theme.spacing(3)
-  },
-  offline: {
-    backgroundColor: colors.grey[50]
-  },
-  away: {
-    backgroundColor: colors.orange[600]
-  },
-  busy: {
-    backgroundColor: colors.red[600]
-  },
-  online: {
-    backgroundColor: colors.green[600]
-  }
+const OnlineIndicatorRoot = styled('span')(({ size, status }) => ({
+  display: 'inline-block',
+  borderRadius: '50%',
+  flexGrow: 0,
+  flexShrink: 0,
+  ...(size === 'small' && {
+    height: 8,
+    width: 8
+  }),
+  ...(size === 'medium' && {
+    height: 16,
+    width: 16
+  }),
+  ...(size === 'large' && {
+    height: 24,
+    width: 24
+  }),
+  ...(status === 'offline' && {
+    backgroundColor: '#f5f5f5'
+  }),
+  ...(status === 'away' && {
+    backgroundColor: '#fb8c00'
+  }),
+  ...(status === 'busy' && {
+    backgroundColor: '#fa1941'
+  }),
+  ...(status === 'online' && {
+    backgroundColor: '#4ada61'
+  })
 }));
 
 function OnlineIndicator({
   className,
-  size,
-  status,
+  size = 'medium',
+  status = 'offline',
   ...rest
 }) {
-  const classes = useStyles();
-  const rootClassName = clsx(
-    {
-      [classes.root]: true,
-      [classes[size]]: size,
-      [classes[status]]: status
-    },
-    className
-  );
-
   return (
-    <span
-      className={rootClassName}
+    <OnlineIndicatorRoot
+      className={className}
+      size={size}
+      status={status}
       {...rest}
     />
   );

@@ -1,140 +1,150 @@
+import React from 'react';
+import { styled, keyframes } from '@mui/material/styles';
 import {
-  Grid, Typography, Box, Paper, Fab
-} from '@material-ui/core'
-import React from 'react'
-import { makeStyles } from '@material-ui/core/styles'
-import { Call, CallEnd } from '@material-ui/icons'
+  Grid,
+  Typography,
+  Box,
+  Paper,
+  Fab
+} from '@mui/material';
+import {
+  Call as CallIcon,
+  CallEnd as CallEndIcon
+} from '@mui/icons-material';
+import PropTypes from 'prop-types';
 
-const useStyles = makeStyles((theme) => ({
-  root: {
-    alignItems: 'center',
-    width: '100%'
-  },
-  answer: {
-    color: theme.palette.common.white,
-    backgroundColor: theme.palette.success.main,
-    '&:hover': {
-      backgroundColor: theme.palette.success.dark
-    },
-    fontSize: 9,
-    alignItems: 'center'
 
+const ringing = keyframes`
+  0% { transform: translate(0, 0); }
+  10% { transform: translate(4px, 0px); }
+  20% { transform: translate(-4px, 0px); }
+  30% { transform: translate(3px, 0px); }
+  40% { transform: translate(-3px, 0px); }
+  50% { transform: translate(2px, 0px); }
+  60% { transform: translate(0, 0); }
+  100% { transform: translate(0, 0); }
+`;
+
+const Root = styled('div')({
+  alignItems: 'center',
+  width: '100%'
+});
+
+const CallButton = styled(Fab)({
+  color: 'white',
+  backgroundColor: '#4ada61',
+  '&:hover': {
+    backgroundColor: '#94f3a4'
   },
-  reject: {
-    color: theme.palette.common.white,
-    backgroundColor: theme.palette.error.main,
-    '&:hover': {
-      backgroundColor: theme.palette.error.dark
-    },
-    fontSize: 9
+  fontSize: 9,
+  alignItems: 'center'
+});
+
+const EndCallButton = styled(Fab)({
+  color: 'white',
+  backgroundColor: '#fa1941',
+  '&:hover': {
+    backgroundColor: '#f8939b'
   },
-  wrapper: {
-    background: '#fff',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '16px'
-  },
-  callButton: {
-    color: 'white',
-    background: '#4ada61',
-    '&:hover': {
-      background: '#94f3a4'
-    }
-  },
-  endCallButton: {
-    color: 'white',
-    background: '#fa1941',
-    '&:hover': {
-      background: '#f8939b'
-    }
-  },
-  '@keyframes ringing': {
-    '0%': { transform: 'translate(0, 0)' },
-    '10%': { transform: 'translate(4px, 0px)' },
-    '20%': { transform: 'translate(-4px, 0px)' },
-    '30%': { transform: 'translate(3px, 0px)' },
-    '40%': { transform: 'translate(-3px, 0px)' },
-    '50%': { transform: 'translate(2px, 0px)' },
-    '60%': { transform: 'translate(0, 0)' },
-    '100%': { transform: 'translate(0, 0)' }
-  },
-  ringing: {
-    animation: '$ringing .6s infinite'
-  }
-}))
+  fontSize: 9
+});
+
+const Wrapper = styled(Paper)({
+  background: '#fff',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: '16px'
+});
+
+const RingingIcon = styled('div')({
+  animation: `${ringing} 0.6s infinite`
+});
+
+const CallInfo = styled(Box)({
+  overflow: 'auto',
+  whiteSpace: 'normal',
+  backgroundColor: 'transparent'
+});
+
+const GridContainer = styled(Grid)({
+  maxWidth: 120
+});
+
+const CallerInfo = styled(Typography)({
+  fontWeight: 500,
+  color: '#333'
+});
 
 function CallQueue({ calls, handleAnswer, handleReject }) {
-  const classes = useStyles()
   return (
-    <div className={classes.root}>
+    <Root>
       {calls.map((call) => {
-        const parsedCaller = call.callNumber.split('-')
+        const parsedCaller = call.callNumber.split('-');
+        
         return (
-          <Paper
-            className={classes.wrapper}
+          <Wrapper
             key={call.sessionId}
+            elevation={1}
           >
             <Grid item xs={12}>
-              {parsedCaller[0] ? (
-                <Box overflow='auto' component='div' whiteSpace='normal' bgcolor='background.paper'>
-                  <Typography variant='subtitle1'>
-                    Caller:
-                    {parsedCaller[0]}
+              {parsedCaller[0] && (
+                <Box overflow="auto" component="div" whiteSpace="normal">
+                  <Typography variant="subtitle1">
+                    Caller: {parsedCaller[0]}
                   </Typography>
                 </Box>
-              ) : <div />}
-              {parsedCaller[1] ? (
-                <Box overflow='auto' component='div' whiteSpace='normal' bgcolor='background.paper'>
-                  <Typography variant='subtitle1'>
-                    Jurisdiction:
-                    {parsedCaller[1]}
+              )}
+              {parsedCaller[1] && (
+                <Box overflow="auto" component="div" whiteSpace="normal">
+                  <Typography variant="subtitle1">
+                    Jurisdiction: {parsedCaller[1]}
                   </Typography>
                 </Box>
-              ) : <div />}
-              {parsedCaller[2] ? (
-                <Box overflow='auto' component='div' whiteSpace='normal' bgcolor='background.paper'>
-                  <Typography variant='subtitle1'>
-                    To Number:
-                    {parsedCaller[2]}
+              )}
+              {parsedCaller[2] && (
+                <Box overflow="auto" component="div" whiteSpace="normal">
+                  <Typography variant="subtitle1">
+                    To Number: {parsedCaller[2]}
                   </Typography>
                 </Box>
-              ) : <div />}
-
+              )}
             </Grid>
 
-            <Grid item xs={6}>
-              <div
-                className={classes.paper}
-              >
-                <Fab
-                  className={classes.callButton}
-                  size='small'
+            <Grid container spacing={2} sx={{ maxWidth: 120 }}>
+              <Grid item xs={6}>
+                <CallButton
+                  size="small"
                   onClick={handleAnswer}
                   value={call.sessionId}
                 >
-                  <Call className={classes.ringing} />
-                </Fab>
-              </div>
-            </Grid>
-            <Grid item xs={6}>
-              <div className={classes.paper}>
-                {/* <Button variant="contained" color="primary" onClick={handleReject} value={call.sessionId} className={classes.reject}>Reject</Button> */}
-                <Fab
-                  size='small'
-                  className={classes.endCallButton}
+                  <RingingIcon />
+                </CallButton>
+              </Grid>
+              <Grid item xs={6}>
+                <EndCallButton
+                  size="small"
                   onClick={handleReject}
                   value={call.sessionId}
                 >
-                  <CallEnd />
-                </Fab>
-              </div>
+                  <CallEndIcon />
+                </EndCallButton>
+              </Grid>
             </Grid>
-          </Paper>
-        )
+          </Wrapper>
+        );
       })}
-    </div>
-  )
+    </Root>
+  );
 }
 
-export default CallQueue
+CallQueue.propTypes = {
+  calls: PropTypes.arrayOf(PropTypes.shape({
+    sessionId: PropTypes.string.isRequired,
+    callNumber: PropTypes.string.isRequired
+  })).isRequired,
+  handleAnswer: PropTypes.func.isRequired,
+  handleReject: PropTypes.func.isRequired
+};
+
+export default CallQueue;

@@ -1,11 +1,11 @@
-import React from 'react'
-import { makeStyles } from '@material-ui/core/styles'
+import React from 'react';
+import { styled } from '@mui/material/styles';
 import {
   VolumeUp,
   VolumeOff,
   NotificationsActive,
   NotificationsOff
-} from '@material-ui/icons'
+} from '@mui/icons-material';
 import {
   Grid,
   FormControl,
@@ -14,35 +14,36 @@ import {
   Slider,
   Switch,
   LinearProgress
-} from '@material-ui/core'
-import PropTypes from 'prop-types'
+} from '@mui/material';
+import PropTypes from 'prop-types';
 
-const useStyles = makeStyles((theme) => ({
-  root: {
-    padding: theme.spacing(0)
-  },
-  sliderIcons: {
-    marginRight: '10px', color: '#546e7a'
-  },
-  tab: {
-    '& .MuiBox-root': {
-      padding: theme.spacing(2)
-    }
-  },
-  form: {
-    margin: 0
-  },
-  label: {
-    margin: 0,
-    padding: '0 8px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    width: '100%'
-  },
-  switch: {
+const SettingsRoot = styled('div')({
+  padding: 0
+});
+
+const SliderIcon = styled('span')({
+  marginRight: '10px',
+  color: '#546e7a'
+});
+
+const StyledFormControl = styled(FormControl)({
+  margin: 0
+});
+
+const StyledFormControlLabel = styled(FormControlLabel)({
+  margin: 0,
+  padding: '0 8px',
+  display: 'flex',
+  justifyContent: 'space-between',
+  width: '100%',
+  '& .MuiSwitch-root': {
     marginRight: '-8px'
   }
-}))
+});
+
+const SliderContainer = styled(Grid)({
+  margin: '8px 16px 8px 8px'
+});
 
 function SettingsBlock({
   localStatePhone,
@@ -51,87 +52,129 @@ function SettingsBlock({
   handleNotifications,
   handleSettingsSlider
 }) {
-  const classes = useStyles()
-
   const {
-    connectedPhone, connectingPhone, phoneConnectOnStart, notifications, ringVolume, callVolume
-  } = localStatePhone
+    connectedPhone,
+    connectingPhone,
+    phoneConnectOnStart,
+    notifications,
+    ringVolume,
+    callVolume
+  } = localStatePhone;
 
   const [sliderValue, setSliderValue] = React.useState({
     ringVolume,
     callVolume
-  })
+  });
 
   const handleSettingsSliderState = (name) => (e, newValue) => {
     setSliderValue((prevState) => ({
       ...prevState,
       [name]: newValue
-    }))
+    }));
 
-    handleSettingsSlider(name, newValue)
-  }
+    handleSettingsSlider(name, newValue);
+  };
 
   return (
+    <SettingsRoot>
+      <Grid container spacing={2}>
+        <SliderContainer 
+          container 
+          direction="row" 
+          justifyContent="space-between" 
+          alignItems="center"
+        >
+          <SliderIcon>
+            {sliderValue.ringVolume === 0 
+              ? <NotificationsOff /> 
+              : <NotificationsActive />}
+          </SliderIcon>
+          <Slider 
+            value={sliderValue.ringVolume} 
+            onChange={handleSettingsSliderState('ringVolume')} 
+            aria-labelledby="continuous-slider" 
+            sx={{ width: 'calc(100% - 34px)' }}
+          />
+        </SliderContainer>
 
-    <div className={classes.root}>
-      <Grid
-        container
-        spacing={2}
-      >
-        <Grid container direction='row' justify='space-between' alignItems='center' style={{ margin: '8px 16px 8px 8px' }}>
-          {sliderValue.ringVolume === 0
-            ? <NotificationsOff className={classes.sliderIcons} />
-            : <NotificationsActive className={classes.sliderIcons} />}
-          <Slider value={sliderValue.ringVolume} onChange={handleSettingsSliderState('ringVolume')} aria-labelledby='continuous-slider' style={{ width: 'calc(100% - 34px)' }} />
-        </Grid>
-        <Grid container direction='row' justify='space-between' alignItems='center' style={{ margin: '8px 16px 8px 8px' }}>
-          {sliderValue.callVolume === 0
-            ? <VolumeOff className={classes.sliderIcons} />
-            : <VolumeUp className={classes.sliderIcons} />}
-          <Slider value={sliderValue.callVolume} onChange={handleSettingsSliderState('callVolume')} aria-labelledby='continuous-slider' style={{ width: 'calc(100% - 34px)' }} />
-        </Grid>
-        <FormControl component='fieldset' className={classes.form}>
-          <FormGroup aria-label='position' row>
-            <FormControlLabel
-              value='top'
-              control={<Switch className={classes.switch} checked={notifications} color='primary' onChange={handleNotifications} />}
-              label='Notifications'
-              labelPlacement='start'
-              className={classes.label}
-            />
-            <FormControlLabel
-              value='top'
-              control={<Switch className={classes.switch} checked={phoneConnectOnStart} color='primary' onChange={handleConnectOnStart} />}
-              label='Auto Connect'
-              labelPlacement='start'
-              className={classes.label}
+        <SliderContainer 
+          container 
+          direction="row" 
+          justifyContent="space-between" 
+          alignItems="center"
+        >
+          <SliderIcon>
+            {sliderValue.callVolume === 0 
+              ? <VolumeOff /> 
+              : <VolumeUp />}
+          </SliderIcon>
+          <Slider 
+            value={sliderValue.callVolume} 
+            onChange={handleSettingsSliderState('callVolume')} 
+            aria-labelledby="continuous-slider" 
+            sx={{ width: 'calc(100% - 34px)' }}
+          />
+        </SliderContainer>
+
+        <StyledFormControl component="fieldset">
+          <FormGroup aria-label="position" row>
+            <StyledFormControlLabel
+              control={
+                <Switch 
+                  checked={notifications} 
+                  color="primary" 
+                  onChange={handleNotifications}
+                />
+              }
+              label="Notifications"
+              labelPlacement="start"
             />
 
-            <FormControlLabel
-              value='top'
-              control={<Switch className={classes.switch} disabled={connectingPhone} checked={connectedPhone} color='primary' onChange={handleConnectPhone} />}
+            <StyledFormControlLabel
+              control={
+                <Switch 
+                  checked={phoneConnectOnStart} 
+                  color="primary" 
+                  onChange={handleConnectOnStart}
+                />
+              }
+              label="Auto Connect"
+              labelPlacement="start"
+            />
+
+            <StyledFormControlLabel
+              control={
+                <Switch 
+                  disabled={connectingPhone} 
+                  checked={connectedPhone} 
+                  color="primary" 
+                  onChange={handleConnectPhone}
+                />
+              }
               label={connectedPhone ? 'Disconnect' : 'Connect'}
-              labelPlacement='start'
-              className={classes.label}
+              labelPlacement="start"
             />
-
           </FormGroup>
-          {connectingPhone ? <LinearProgress /> : ''}
-        </FormControl>
-
+          {connectingPhone && <LinearProgress />}
+        </StyledFormControl>
       </Grid>
-
-    </div>
-
-  )
+    </SettingsRoot>
+  );
 }
+
 SettingsBlock.propTypes = {
-  localStatePhone: PropTypes.any,
-  handleConnectPhone: PropTypes.any,
-  handleConnectOnStart: PropTypes.any,
-  handleSettingsSlider: PropTypes.any,
-  handleNotifications: PropTypes.any
+  localStatePhone: PropTypes.shape({
+    connectedPhone: PropTypes.bool.isRequired,
+    connectingPhone: PropTypes.bool.isRequired,
+    phoneConnectOnStart: PropTypes.bool.isRequired,
+    notifications: PropTypes.bool.isRequired,
+    ringVolume: PropTypes.number.isRequired,
+    callVolume: PropTypes.number.isRequired
+  }).isRequired,
+  handleConnectPhone: PropTypes.func.isRequired,
+  handleConnectOnStart: PropTypes.func.isRequired,
+  handleSettingsSlider: PropTypes.func.isRequired,
+  handleNotifications: PropTypes.func.isRequired
+};
 
-}
-
-export default SettingsBlock
+export default SettingsBlock;

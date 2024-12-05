@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'
-import { makeStyles } from '@material-ui/core/styles'
-import PropTypes from 'prop-types'
+import React, { useState, useEffect } from 'react';
+import { styled } from '@mui/material/styles';
+import PropTypes from 'prop-types';
 import {
   Divider,
   IconButton,
@@ -10,64 +10,82 @@ import {
   ListItemText,
   Paper,
   Popover
-} from '@material-ui/core'
-import { Search } from '@material-ui/icons'
-import OnlineIndicator from './OnlineIndicator'
+} from '@mui/material';
+import { Search } from '@mui/icons-material';
+import OnlineIndicator from './OnlineIndicator';
 
-const useStyles = makeStyles((theme) => ({
-  flexBetween: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center'
-  },
-  status: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    margin: '0 0 0 10px'
-  },
-  input: {
-    marginLeft: theme.spacing(1),
-    flex: 1
-  },
-  iconButton: {
-    padding: '0 10px'
-  },
-  list: {
-    width: '100%',
-    maxWidth: 360,
-    backgroundColor: theme.palette.background.paper
-  }
-}))
+const SearchListRoot = styled('div')({
+  width: '100%'
+});
 
-function SearchList({
+const SearchListBox = styled(List)({
+  width: '100%',
+  maxWidth: 360,
+  backgroundColor: '#fff',
+  position: 'relative',
+  overflow: 'auto',
+  maxHeight: 300,
+  padding: 0
+});
+
+const FlexBetween = styled('span')({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center'
+});
+
+const StatusWrapper = styled('div')({
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  margin: '0 0 0 10px'
+});
+
+const SearchInput = styled(InputBase)({
+  marginLeft: 8,
+  flex: 1
+});
+
+const SearchIconButton = styled(IconButton)({
+  padding: '0 10px'
+});
+
+const SearchPaper = styled(Paper)({
+  padding: '5px',
+  display: 'flex',
+  alignItems: 'center'
+});
+
+function SearchListComponent({
   asteriskAccounts = [],
   onClickList,
   ariaDescribedby,
   anchorEl,
   setAnchorEl
 }) {
-  const classes = useStyles()
-  const [list, setList] = React.useState(asteriskAccounts)
-  const [inputSearch, setInputSearch] = useState('')
-  const open = Boolean(anchorEl)
-  const id = open ? `${ariaDescribedby}` : undefined
-  const handleClose = () => setAnchorEl(null)
+  const [list, setList] = React.useState(asteriskAccounts);
+  const [inputSearch, setInputSearch] = useState('');
+  const open = Boolean(anchorEl);
+  const id = open ? `${ariaDescribedby}` : undefined;
+  
+  const handleClose = () => setAnchorEl(null);
+  
   const handleClick = (value) => {
-    onClickList(value)
-    setAnchorEl(null)
-  }
+    onClickList(value);
+    setAnchorEl(null);
+  };
 
   useEffect(() => {
     const searchedAccounts = asteriskAccounts
       .filter((acc) => acc.label.toLowerCase()
         .includes(inputSearch.toLowerCase()) || acc.accountId
-        .includes(inputSearch))
-    setList(searchedAccounts)
-  }, [inputSearch, asteriskAccounts])
+        .includes(inputSearch));
+    setList(searchedAccounts);
+  }, [inputSearch, asteriskAccounts]);
+
   return (
     <>
-      { open ? (
+      {open && (
         <Popover
           id={id}
           open={open}
@@ -76,21 +94,20 @@ function SearchList({
           anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
           transformOrigin={{ vertical: 'top', horizontal: 'center' }}
         >
-          <List component='nav' className={classes.list} aria-label='accounts'>
+          <SearchList component="nav" aria-label="accounts">
             <ListItem>
               <ListItemText primary={(
-                <Paper style={{ padding: '5px' }}>
-                  <InputBase
-                    id='inputSearch'
-                    className={classes.input}
-                    placeholder='Search'
+                <Paper sx={{ padding: '5px' }}>
+                  <SearchInput
+                    id="inputSearch"
+                    placeholder="Search"
                     inputProps={{ 'aria-label': 'search' }}
                     onChange={(event) => setInputSearch(event.target.value)}
                     defaultValue={inputSearch}
                   />
-                  <IconButton type='submit' className={classes.iconButton} aria-label='search'>
+                  <SearchIconButton type="submit" aria-label="search">
                     <Search />
-                  </IconButton>
+                  </SearchIconButton>
                 </Paper>
               )}
               />
@@ -103,33 +120,39 @@ function SearchList({
                 onClick={() => handleClick(account.accountId)}
               >
                 <ListItemText primary={(
-                  <span className={classes.flexBetween}>
+                  <FlexBetween>
                     {account.label}
                     {' '}
                     {account.accountId}
                     {' '}
-                    <div className={classes.status}>
+                    <StatusWrapper>
                       <OnlineIndicator
-                        size='small'
+                        size="small"
                         status={account.online === 'true' ? 'online' : 'busy'}
                       />
-                    </div>
-                  </span>
+                    </StatusWrapper>
+                  </FlexBetween>
                 )}
                 />
               </ListItem>
             ))}
-          </List>
+          </SearchList>
         </Popover>
-      ) : null }
+      )}
     </>
-  )
+  );
 }
-SearchList.propTypes = {
-  asteriskAccounts: PropTypes.any,
-  onClickList: PropTypes.any,
-  ariaDescribedby: PropTypes.any,
-  anchorEl: PropTypes.any,
-  setAnchorEl: PropTypes.any
-}
-export default SearchList
+
+SearchListComponent.propTypes = {
+  asteriskAccounts: PropTypes.arrayOf(PropTypes.shape({
+    accountId: PropTypes.string.isRequired,
+    label: PropTypes.string.isRequired,
+    online: PropTypes.string.isRequired
+  })),
+  onClickList: PropTypes.func.isRequired,
+  ariaDescribedby: PropTypes.string,
+  anchorEl: PropTypes.object,
+  setAnchorEl: PropTypes.func.isRequired
+};
+
+export default SearchListComponent;

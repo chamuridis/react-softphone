@@ -1,121 +1,130 @@
 import { UA, debug } from 'jssip';
 import _ from 'lodash';
 
-function CallsFlowControl() {
-  this.onUserAgentAction = () => {};
+class CallsFlowControl {
+  constructor() {
+    this.onUserAgentAction = () => {};
+    this.onCallActionConnection = () => {};
+    this.engineEvent = () => {};
+    this.micMuted = false;
+    this.activeCall = null;
+    this.activeChanel = null;
+    this.callsQueue = [];
+    this.holdCallsQueue = [];
+    this.player = {};
+    this.ringer = null;
+    this.connectedPhone = null;
+    this.config = {};
+    this.initiated = false;
+  }
 
-  this.notify = (message) => {
+  notify = (message) => {
     this.onCallActionConnection('notify', message);
   };
-  this.tmpEvent = () => {
-    console.log(this.activeCall);
-    console.log(this.callsQueue);
-    console.log(this.holdCallsQueue);
+
+  tmpEvent = () => {
+    console.log('Active Call:', this.activeCall);
+    console.log('Calls Queue:', this.callsQueue);
+    console.log('Hold Calls Queue:', this.holdCallsQueue);
   };
-  this.onCallActionConnection = () => {};
-  this.engineEvent = () => {};
-  this.setMicMuted = () => {
-    if (this.micMuted && this.activeCall) {
+
+  setMicMuted = () => {
+    if (!this.activeCall) return;
+
+    if (this.micMuted) {
       this.activeCall.unmute();
       this.micMuted = false;
       this.onCallActionConnection('unmute', this.activeCall.id);
-    } else if (!this.micMuted && this.activeCall) {
-      this.micMuted = true;
+    } else {
       this.activeCall.mute();
+      this.micMuted = true;
       this.onCallActionConnection('mute', this.activeCall.id);
     }
   };
-  this.hold = (sessionId) => {
-    // If there is an active call with id that is requested then fire hold
-    if (this.activeCall.id === sessionId) {
+
+  hold = (sessionId) => {
+    if (this.activeCall?.id === sessionId) {
       this.activeCall.hold();
     }
   };
-  this.unhold = (sessionId) => {
-    // If we dont have active call then unhold the the call with requested id
+
+  unhold = (sessionId) => {
     if (!this.activeCall) {
-      // Find the Requested call in hold calls array
       const toUnhold = _.find(this.holdCallsQueue, { id: sessionId });
-      // If we found the call in hold calls array the fire unhold function
       if (toUnhold) {
         toUnhold.unhold();
       }
     } else {
-      console.log('Please exit from all active calls to unhold');
+      console.warn('Please exit from all active calls to unhold');
     }
   };
-  this.micMuted = false;
-  this.activeCall = null;
-  this.activeChanel = null;
-  this.callsQueue = [];
-  this.holdCallsQueue = [];
-  this.player = {};
-  this.ringer = null;
-  this.connectedPhone = null;
-  this.config = {};
-  this.initiated = false;
-  this.playRing = () => {
-    this.ringer.current.currentTime = 0;
-    this.ringer.current.play();
+
+  playRing = () => {
+    if (this.ringer?.current) {
+      this.ringer.current.currentTime = 0;
+      this.ringer.current.play().catch(error => {
+        console.warn('Error playing ring:', error);
+      });
+    }
   };
-  this.stopRing = () => {
-    this.ringer.current.currentTime = 0;
-    this.ringer.current.pause();
+
+  stopRing = () => {
+    if (this.ringer?.current) {
+      this.ringer.current.currentTime = 0;
+      this.ringer.current.pause();
+    }
   };
-  this.removeCallFromQueue = (callId) => {
+
+  removeCallFromQueue = (callId) => {
     _.remove(this.callsQueue, (calls) => calls.id === callId);
   };
-  this.addCallToHoldQueue = (callId) => {
-    if (this.activeCall.id === callId) {
+
+  addCallToHoldQueue = (callId) => {
+    if (this.activeCall?.id === callId) {
       this.holdCallsQueue.push(this.activeCall);
     }
   };
-  this.removeCallFromActiveCall = (callId) => {
-    if (this.activeCall && callId === this.activeCall.id) {
+
+  removeCallFromActiveCall = (callId) => {
+    if (this.activeCall?.id === callId) {
       this.activeCall = null;
     }
   };
-  this.removeCallFromHoldQueue = (callId) => {
+
+  removeCallFromHoldQueue = (callId) => {
     _.remove(this.holdCallsQueue, (calls) => calls.id === callId);
   };
-  this.connectAudio = () => {
+
+  connectAudio = () => {
+    if (!this.activeCall?.connection) return;
+
     this.activeCall.connection.addEventListener('addstream', (event) => {
-      this.player.current.srcObject = event.stream;
+      if (this.player?.current) {
+        this.player.current.srcObject = event.stream;
+      }
     });
   };
 
-  this.sessionEvent = (type, data, cause, callId) => {
-    // console.log(`Session: ${type}`);
-    // console.log('Data: ', data);
-    // console.log('callid: ', callId);
-
+  sessionEvent = (type, data, cause, callId) => {
     switch (type) {
-      case 'terminated':
-        //  this.endCall(data, cause);
-        break;
-      case 'accepted':
-        // this.startCall(data);
-        break;
       case 'reinvite':
         this.onCallActionConnection('reinvite', callId, data);
+        this.addCallToHoldQueue(callId);
+        this.removeCallFromActiveCall(callId);
         break;
+
       case 'hold':
         this.onCallActionConnection('hold', callId);
         this.addCallToHoldQueue(callId);
         this.removeCallFromActiveCall(callId);
         break;
+
       case 'unhold':
         this.onCallActionConnection('unhold', callId);
         this.activeCall = _.find(this.holdCallsQueue, { id: callId });
         this.removeCallFromHoldQueue(callId);
         break;
-      case 'dtmf':
-        break;
-      case 'muted':
-        this.onCallActionConnection('muted', callId);
-        break;
-      case 'unmuted':
-        break;
+
       case 'confirmed':
         if (!this.activeCall) {
           this.activeCall = _.find(this.callsQueue, { id: callId });
@@ -123,8 +132,7 @@ function CallsFlowControl() {
         this.removeCallFromQueue(callId);
         this.onCallActionConnection('callAccepted', callId, this.activeCall);
         break;
-      case 'connecting':
-        break;
+
       case 'ended':
         this.onCallActionConnection('callEnded', callId);
         this.removeCallFromQueue(callId);
@@ -134,6 +142,7 @@ function CallsFlowControl() {
           this.stopRing();
         }
         break;
+
       case 'failed':
         this.onCallActionConnection('callEnded', callId);
         this.removeCallFromQueue(callId);
@@ -142,13 +151,15 @@ function CallsFlowControl() {
           this.stopRing();
         }
         break;
+
       default:
         break;
     }
   };
 
-  this.handleNewRTCSession = (rtcPayload) => {
+  handleNewRTCSession = (rtcPayload) => {
     const { session: call } = rtcPayload;
+    
     if (call.direction === 'incoming') {
       this.callsQueue.push(call);
       this.onCallActionConnection('incomingCall', call);
@@ -160,6 +171,7 @@ function CallsFlowControl() {
       this.onCallActionConnection('outgoingCall', call);
       this.connectAudio();
     }
+
     const defaultCallEventsToHandle = [
       'peerconnection',
       'connecting',
@@ -184,18 +196,20 @@ function CallsFlowControl() {
       'connecting',
       'confirmed'
     ];
-    _.forEach(defaultCallEventsToHandle, (eventType) => {
+
+    defaultCallEventsToHandle.forEach((eventType) => {
       call.on(eventType, (data, cause) => {
         this.sessionEvent(eventType, data, cause, call.id);
       });
     });
   };
 
-  this.init = () => {
+  init = () => {
     try {
       this.phone = new UA(this.config);
-      this.phone.on('newRTCSession', this.handleNewRTCSession.bind(this));
-      const binds = [
+      this.phone.on('newRTCSession', this.handleNewRTCSession);
+
+      const events = [
         'connected',
         'disconnected',
         'registered',
@@ -205,28 +219,30 @@ function CallsFlowControl() {
         'message',
         'connecting'
       ];
-      _.forEach(binds, (value) => {
-        this.phone.on(value, (e) => {
-          this.engineEvent(value, e);
+
+      events.forEach((event) => {
+        this.phone.on(event, (e) => {
+          this.engineEvent(event, e);
         });
       });
+
       this.initiated = true;
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      console.error('Error initializing phone:', error);
     }
   };
 
-  this.call = (to) => {
+  call = (to) => {
     if (!this.connectedPhone) {
-      this.notify('Please connect to Voip Server in order to make calls');
-      console.log('User agent not registered yet');
+      this.notify('Please connect to VoIP Server in order to make calls');
       return;
     }
+
     if (this.activeCall) {
       this.notify('Already have an active call');
-      console.log('Already has active call');
       return;
     }
+
     this.phone.call(`sip:${to}@${this.config.domain}`, {
       extraHeaders: ['First: first', 'Second: second'],
       RTCConstraints: {
@@ -239,46 +255,44 @@ function CallsFlowControl() {
     });
   };
 
-  this.answer = (sessionId) => {
+  answer = (sessionId) => {
     if (this.activeCall) {
       this.notify('Already have an active call');
-      console.log('Already has active call');
-    } else if (this.activeChanel.inCall) {
-      this.notify('Current chanel is busy');
-      console.log('Chanel is Busy');
-    } else {
-      // Stop the annoying ring ring
-      this.stopRing();
+      return;
+    }
 
-      // Get the call from calls Queue
-      this.activeCall = _.find(this.callsQueue, { id: sessionId });
-      if (this.activeCall) {
-        this.activeCall.customPayload = this.activeChanel.id;
-        this.activeCall.answer({
-          mediaConstraints: {
-            audio: true
-          }
-        });
+    if (this.activeChanel.inCall) {
+      this.notify('Current channel is busy');
+      return;
+    }
 
-        // Connect Audio
-        this.connectAudio();
-      }
+    this.stopRing();
+    this.activeCall = _.find(this.callsQueue, { id: sessionId });
+
+    if (this.activeCall) {
+      this.activeCall.customPayload = this.activeChanel.id;
+      this.activeCall.answer({
+        mediaConstraints: {
+          audio: true
+        }
+      });
+      this.connectAudio();
     }
   };
 
-  this.hungup = (e) => {
+  hungup = (sessionId) => {
     try {
-      this.phone._sessions[e].terminate();
-    } catch (e) {
-      console.log(e);
-      console.log('Call already terminated');
+      if (this.phone?._sessions[sessionId]) {
+        this.phone._sessions[sessionId].terminate();
+      }
+    } catch (error) {
+      console.warn('Call already terminated:', error);
     }
   };
 
-  this.start = () => {
+  start = () => {
     if (!this.initiated) {
       this.notify('Error: 356 Please report');
-      console.log('Please call .init() before connect');
       return;
     }
 
@@ -287,11 +301,14 @@ function CallsFlowControl() {
     } else {
       debug.disable();
     }
+
     this.phone.start();
   };
 
-  this.stop = () => {
-    this.phone.stop();
+  stop = () => {
+    if (this.phone) {
+      this.phone.stop();
+    }
   };
 }
 

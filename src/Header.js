@@ -1,61 +1,60 @@
-import React from 'react'
-import PropTypes from 'prop-types'
-import clsx from 'clsx'
-import { makeStyles } from '@material-ui/core/styles'
-import { Grid, Typography, Button } from '@material-ui/core'
+import React from 'react';
+import PropTypes from 'prop-types';
+import { styled } from '@mui/material/styles';
+import { Grid, Typography, Button } from '@mui/material';
 
-const useStyles = makeStyles(() => ({
-  root: {}
-}))
+const HeaderRoot = styled('div')(() => ({
+  width: '100%'
+}));
 
 function Header({ className, addAccount, ...rest }) {
-  const classes = useStyles()
   const handleAddAccount = () => {
-    addAccount()
-  }
+    addAccount();
+  };
+
   return (
-    <div
+    <HeaderRoot
+      className={className}
       {...rest}
-      className={clsx(classes.root, className)}
     >
       <Grid
-        alignItems='flex-end'
         container
-        justify='space-between'
+        alignItems="flex-end"
+        justifyContent="space-between"
         spacing={3}
       >
         <Grid item>
           <Typography
-            component='h2'
+            component="h2"
             gutterBottom
-            variant='overline'
+            variant="overline"
           >
             Management
           </Typography>
           <Typography
-            component='h1'
-            variant='h3'
+            component="h1"
+            variant="h3"
           >
             Accounts
           </Typography>
         </Grid>
         <Grid item>
           <Button
-            color='primary'
-            variant='contained'
+            color="primary"
+            variant="contained"
             onClick={handleAddAccount}
-
           >
             Add Account
           </Button>
         </Grid>
       </Grid>
-    </div>
-  )
+    </HeaderRoot>
+  );
 }
 
 Header.propTypes = {
-  className: PropTypes.string
-}
+  className: PropTypes.string,
+  addAccount: PropTypes.func
+};
 
-export default Header
+export default Header;

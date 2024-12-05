@@ -1,8 +1,7 @@
-import React, {
-  forwardRef
-} from 'react'
-import { Helmet } from 'react-helmet'
-import PropTypes from 'prop-types'
+import React, { forwardRef } from 'react';
+import { Helmet } from 'react-helmet';
+import PropTypes from 'prop-types';
+import { Box } from '@mui/material';
 
 const Page = forwardRef(({
   title,
@@ -10,7 +9,7 @@ const Page = forwardRef(({
   ...rest
 }, ref) => {
   return (
-    <div
+    <Box
       ref={ref}
       {...rest}
     >
@@ -18,13 +17,15 @@ const Page = forwardRef(({
         <title>{title}</title>
       </Helmet>
       {children}
-    </div>
-  )
-})
+    </Box>
+  );
+});
 
 Page.propTypes = {
   children: PropTypes.node,
   title: PropTypes.string
-}
+};
 
-export default Page
+Page.displayName = 'Page';
+
+export default Page;

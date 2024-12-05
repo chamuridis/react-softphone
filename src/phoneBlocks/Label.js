@@ -1,72 +1,70 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import clsx from 'clsx'
-import {
-  fade,
-  makeStyles
-} from '@material-ui/core'
+import { styled } from '@mui/material/styles'
 
-const useStyles = makeStyles((theme) => ({
-  root: {
-    fontFamily: theme.typography.fontFamily,
-    alignItems: 'center',
-    borderRadius: 2,
-    display: 'inline-flex',
-    flexGrow: 0,
-    whiteSpace: 'nowrap',
-    cursor: 'default',
-    flexShrink: 0,
-    fontSize: theme.typography.pxToRem(12),
-    fontWeight: theme.typography.fontWeightMedium,
-    height: 20,
-    justifyContent: 'center',
-    letterSpacing: 0.5,
-    minWidth: 20,
-    padding: theme.spacing(0.5, 1),
-    textTransform: 'uppercase'
-  },
-  primary: {
-    color: theme.palette.primary.main,
-    backgroundColor: fade(theme.palette.primary.main, 0.08)
-  },
-  secondary: {
-    color: theme.palette.secondary.main,
-    backgroundColor: fade(theme.palette.secondary.main, 0.08)
-  },
-  error: {
-    color: theme.palette.error.main,
-    backgroundColor: fade(theme.palette.error.main, 0.08)
-  },
-  success: {
-    color: theme.palette.success.main,
-    backgroundColor: fade(theme.palette.success.main, 0.08)
-  },
-  warning: {
-    color: theme.palette.warning.main,
-    backgroundColor: fade(theme.palette.warning.main, 0.08)
-  }
-}))
+const LabelRoot = styled('span')(({ color }) => ({
+  fontFamily: [
+    '-apple-system',
+    'BlinkMacSystemFont',
+    '"Segoe UI"',
+    'Roboto',
+    '"Helvetica Neue"',
+    'Arial',
+    'sans-serif'
+  ].join(','),
+  alignItems: 'center',
+  borderRadius: 2,
+  display: 'inline-flex',
+  flexGrow: 0,
+  whiteSpace: 'nowrap',
+  cursor: 'default',
+  flexShrink: 0,
+  fontSize: '0.75rem',
+  fontWeight: 500,
+  height: 20,
+  justifyContent: 'center',
+  letterSpacing: 0.5,
+  minWidth: 20,
+  padding: '4px 8px',
+  textTransform: 'uppercase',
+  ...(color === 'primary' && {
+    color: '#3949ab',
+    backgroundColor: 'rgba(57, 73, 171, 0.08)'
+  }),
+  ...(color === 'secondary' && {
+    color: '#6c757d',
+    backgroundColor: 'rgba(108, 117, 125, 0.08)'
+  }),
+  ...(color === 'error' && {
+    color: '#fa1941',
+    backgroundColor: 'rgba(250, 25, 65, 0.08)'
+  }),
+  ...(color === 'success' && {
+    color: '#4ada61',
+    backgroundColor: 'rgba(74, 218, 97, 0.08)'
+  }),
+  ...(color === 'warning' && {
+    color: '#ffc107',
+    backgroundColor: 'rgba(255, 193, 7, 0.08)'
+  })
+}));
 
 function Label({
   className,
-  color,
+  color = 'secondary',
   children,
   style,
   ...rest
 }) {
-  const classes = useStyles()
-
   return (
-    <span
-      className={
-        clsx(classes.root, {
-          [classes[color]]: color
-        }, className)
-      }
+    <LabelRoot
+      className={className}
+      color={color}
+      style={style}
       {...rest}
     >
       {children}
-    </span>
+    </LabelRoot>
   )
 }
 
@@ -82,4 +80,4 @@ Label.defaultProps = {
   color: 'secondary'
 }
 
-export default Label
+export default Label;
