@@ -29,7 +29,7 @@ import SwipeCaruselBodyBlock from './phoneBlocks/SwipeCaruselBodyBlock';
 import StatusBlock from './phoneBlocks/status-block';
 import CallQueue from './phoneBlocks/call-queue';
 import CallsFlowControl from './CallsFlowControl';
-import { NOTIFICATION_DEFAULTS, debugLog, debugError, debugWarn } from './constants';
+import { NOTIFICATION_DEFAULTS, debugLog, debugError, debugWarn, hasNotificationAPI, isBrowser } from './constants';
 
 const flowRoute = new CallsFlowControl();
 
@@ -260,9 +260,13 @@ function SoftPhone({
   
   // Request permission only when user interacts with notifications setting
   const requestNotificationPermission = () => {
-    Notification.requestPermission().then((permission) => {
-      debugLog('Notification permission:', permission);
-    });
+    if (hasNotificationAPI()) {
+      window.Notification.requestPermission().then((permission) => {
+        debugLog('Notification permission:', permission);
+      });
+    } else {
+      debugLog('Notification API not available in this environment');
+    }
   };
   
   const handleClose = (event, reason) => {
@@ -364,22 +368,24 @@ function SoftPhone({
         // Show notification for incoming calls
         debugLog('Incoming call received, preparing notification')
         
-        // Check if the browser supports notifications
-        if ('Notification' in globalThis) {
+        // Check if the environment supports notifications (browser only)
+        if (hasNotificationAPI()) {
           // Check if permission is already granted
-          if (Notification.permission === 'granted') {
+          if (window.Notification.permission === 'granted') {
             try {
               debugLog('Creating notification - permission already granted')
-              const notification = new Notification(NOTIFICATION_DEFAULTS.TITLE, {
+              const notification = new window.Notification(NOTIFICATION_DEFAULTS.TITLE, {
                 icon: NOTIFICATION_DEFAULTS.ICON,
                 body: `Caller: ${(payload.remote_identity.display_name !== '') ? `${payload.remote_identity.display_name || ''}` : payload.remote_identity.uri.user}`
               });
               
               // Use proper event listener instead of onclick property
               const handleNotificationClick = function() {
-                globalThis.parent.focus();
-                globalThis.focus(); // just in case, older browsers
-                notification.close();
+                if (isBrowser()) {
+                  window.parent.focus();
+                  window.focus(); // just in case, older browsers
+                  notification.close();
+                }
               };
               notification.addEventListener('click', handleNotificationClick);
               
@@ -389,23 +395,25 @@ function SoftPhone({
             }
           } 
           // Check if permission is 'default' (not yet decided)
-          else if (Notification.permission === 'default') {
+          else if (window.Notification.permission === 'default') {
             // Request permission
             debugLog('Requesting notification permission')
-            Notification.requestPermission().then(permission => {
+            window.Notification.requestPermission().then(permission => {
               if (permission === 'granted') {
                 try {
                   debugLog('Creating notification after permission granted')
-                  const notification = new Notification(NOTIFICATION_DEFAULTS.TITLE, {
+                  const notification = new window.Notification(NOTIFICATION_DEFAULTS.TITLE, {
                     icon: NOTIFICATION_DEFAULTS.ICON,
                     body: `Caller: ${(payload.remote_identity.display_name !== '') ? `${payload.remote_identity.display_name || ''}` : payload.remote_identity.uri.user}`
                   });
                   
                   // Use proper event listener instead of onclick property
                   const handleNotificationClick = function() {
-                    globalThis.parent.focus();
-                    globalThis.focus();
-                    notification.close();
+                    if (isBrowser()) {
+                      window.parent.focus();
+                      window.focus();
+                      notification.close();
+                    }
                   };
                   notification.addEventListener('click', handleNotificationClick);
                   
@@ -421,7 +429,7 @@ function SoftPhone({
             debugLog('Notification permission was previously denied');
           }
         } else {
-          debugLog('Browser does not support notifications');
+          debugLog('Notification API not available in this environment (React Native or server-side)');
         }
 
         break;

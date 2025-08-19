@@ -31,21 +31,34 @@ export const CONNECTION_STATES = {
   DISCONNECTED: 'Disconnected'
 };
 
+// Environment detection utilities
+export const isBrowser = () => {
+  return typeof window !== 'undefined' && typeof window.document !== 'undefined';
+};
+
+export const isReactNative = () => {
+  return typeof navigator !== 'undefined' && navigator.product === 'ReactNative';
+};
+
+export const hasNotificationAPI = () => {
+  return isBrowser() && 'Notification' in window;
+};
+
 // Debug logging utility
 export const debugLog = (message, ...args) => {
-  if (typeof window !== 'undefined' && window.__SOFTPHONE_DEBUG__) {
+  if (isBrowser() && window.__SOFTPHONE_DEBUG__) {
     console.log(`[SoftPhone] ${message}`, ...args);
   }
 };
 
 export const debugError = (message, ...args) => {
-  if (typeof window !== 'undefined' && window.__SOFTPHONE_DEBUG__) {
+  if (isBrowser() && window.__SOFTPHONE_DEBUG__) {
     console.error(`[SoftPhone] ${message}`, ...args);
   }
 };
 
 export const debugWarn = (message, ...args) => {
-  if (typeof window !== 'undefined' && window.__SOFTPHONE_DEBUG__) {
+  if (isBrowser() && window.__SOFTPHONE_DEBUG__) {
     console.warn(`[SoftPhone] ${message}`, ...args);
   }
 };
