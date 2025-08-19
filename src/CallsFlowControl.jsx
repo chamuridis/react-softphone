@@ -1,5 +1,6 @@
 import { UA, debug } from 'jssip';
 import _ from 'lodash';
+import { debugLog, debugError, debugWarn } from './constants';
 
 function CallsFlowControl() {
   this.onUserAgentAction = () => {};
@@ -41,7 +42,9 @@ function CallsFlowControl() {
         toUnhold.unhold();
       }
     } else {
-      console.log('Please exit from all active calls to unhold');
+      debugLog('Please exit from all active calls to unhold');
+      this.notify('Please exit from all active calls to unhold');
+
     }
   };
   this.micMuted = false;
@@ -55,13 +58,42 @@ function CallsFlowControl() {
   this.config = {};
   this.initiated = false;
   this.playRing = () => {
-    this.ringer.current.currentTime = 0;
-    this.ringer.current.play();
+    if (this.ringer && this.ringer.current) {
+      try {
+        this.ringer.current.currentTime = 0;
+        this.ringer.current.play().catch((err) => console.error('Ringtone play error:', err));
+      } catch (err) {
+        console.error('Failed to play ringtone:', err);
+      }
+    }
   };
   this.stopRing = () => {
     this.ringer.current.currentTime = 0;
     this.ringer.current.pause();
   };
+
+  this.startRingback = () => {
+    if (this.ringbackTone) {
+      try {
+        this.ringbackTone.currentTime = 0; // Reset to the start
+        this.ringbackTone.play().catch((err) => console.error('Ringback tone play error:', err));
+      } catch (e) {
+        console.error('Failed to play ringback tone:', e);
+      }
+    }
+  };
+
+  this.stopRingback = () => {
+    if (this.ringbackTone) {
+      try {
+        this.ringbackTone.pause();
+        this.ringbackTone.currentTime = 0; // Reset to the start for future calls
+      } catch (e) {
+        console.error('Failed to stop ringback tone:', e);
+      }
+    }
+  };
+
   this.removeCallFromQueue = (callId) => {
     _.remove(this.callsQueue, (calls) => calls.id === callId);
   };
@@ -93,6 +125,20 @@ function CallsFlowControl() {
       case 'terminated':
         //  this.endCall(data, cause);
         break;
+      case 'progress':
+        if (data.originator === 'remote') {
+          // Play ringback tone for outgoing calls only
+          if (data.response.status_code === 180) {
+            this.startRingback();
+          }
+          if (data.response.status_code === 183) {
+            this.stopRingback();
+          }
+        } else {
+          // Do nothing for incoming calls
+          console.log('Progress event for incoming call, ignoring...');
+        }
+        break;
       case 'accepted':
         // this.startCall(data);
         break;
@@ -117,6 +163,7 @@ function CallsFlowControl() {
       case 'unmuted':
         break;
       case 'confirmed':
+        this.stopRingback();
         if (!this.activeCall) {
           this.activeCall = _.find(this.callsQueue, { id: callId });
         }
@@ -135,6 +182,7 @@ function CallsFlowControl() {
         }
         break;
       case 'failed':
+        this.stopRingback();
         this.onCallActionConnection('callEnded', callId);
         this.removeCallFromQueue(callId);
         this.removeCallFromActiveCall(callId);
@@ -143,6 +191,7 @@ function CallsFlowControl() {
         }
         break;
       default:
+        // console.warn(`Unhandled event: ${type}`, { data, cause, callId });
         break;
     }
   };
@@ -191,8 +240,14 @@ function CallsFlowControl() {
     });
   };
 
+  this.validateConfig = () => {
+    if (!this.config.domain) {
+      console.warn('Config error: Missing domain');
+    }
+  };
   this.init = () => {
     try {
+      this.validateConfig();
       this.phone = new UA(this.config);
       this.phone.on('newRTCSession', this.handleNewRTCSession.bind(this));
       const binds = [
@@ -218,12 +273,12 @@ function CallsFlowControl() {
 
   this.call = (to) => {
     if (!this.connectedPhone) {
-      this.notify('Please connect to Voip Server in order to make calls');
+      this.notify('Please connect to VoIP server first');
       console.log('User agent not registered yet');
       return;
     }
     if (this.activeCall) {
-      this.notify('Already have an active call');
+      this.notify('Active call already exists');
       console.log('Already has active call');
       return;
     }
@@ -241,43 +296,37 @@ function CallsFlowControl() {
 
   this.answer = (sessionId) => {
     if (this.activeCall) {
-      this.notify('Already have an active call');
       console.log('Already has active call');
-    } else if (this.activeChanel.inCall) {
-      this.notify('Current chanel is busy');
-      console.log('Chanel is Busy');
-    } else {
-      // Stop the annoying ring ring
+      return;
+    }
+    try {
       this.stopRing();
-
-      // Get the call from calls Queue
       this.activeCall = _.find(this.callsQueue, { id: sessionId });
       if (this.activeCall) {
         this.activeCall.customPayload = this.activeChanel.id;
         this.activeCall.answer({
-          mediaConstraints: {
-            audio: true
-          }
+          mediaConstraints: { audio: true },
         });
-
-        // Connect Audio
         this.connectAudio();
       }
+    } catch (err) {
+      console.error('Error answering call:', err);
+      this.notify('Error answering call');
     }
   };
 
   this.hungup = (e) => {
     try {
       this.phone._sessions[e].terminate();
-    } catch (e) {
-      console.log(e);
+    } catch (s) {
+      console.log(s);
       console.log('Call already terminated');
     }
   };
 
   this.start = () => {
     if (!this.initiated) {
-      this.notify('Error: 356 Please report');
+      this.notify('Please initialize phone before connecting');
       console.log('Please call .init() before connect');
       return;
     }

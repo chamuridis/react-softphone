@@ -1,18 +1,31 @@
-import babel from 'rollup-plugin-babel'
-import commonjs from 'rollup-plugin-commonjs'
-import external from 'rollup-plugin-peer-deps-external'
-import resolve from 'rollup-plugin-node-resolve'
-import url from 'rollup-plugin-url'
+import { nodeResolve } from '@rollup/plugin-node-resolve'
+import commonjs from '@rollup/plugin-commonjs'
+import json from '@rollup/plugin-json'
+import esbuild from 'rollup-plugin-esbuild'
+import peerDepsExternal from 'rollup-plugin-peer-deps-external'
+import terser from '@rollup/plugin-terser'
 
-import pkg from './package.json'
+import pkg from './package.json' with { type: 'json' }
 
 export default {
-  input: 'src/index.js',
+  input: 'src/index.jsx',
+  external: (id) => {
+    // Only React and ReactDOM as external - bundle everything else including ALL MUI
+    if (id === 'react' || id === 'react-dom' || id === 'react/jsx-runtime') {
+      return true;
+    }
+    // Ensure MUI packages are NOT external (should be bundled)
+    if (id.startsWith('@mui/') || id.startsWith('@emotion/')) {
+      return false;
+    }
+    return false;
+  },
   output: [
     {
       file: pkg.main,
       format: 'cjs',
-      sourcemap: true
+      sourcemap: true,
+      exports: 'named'
     },
     {
       file: pkg.module,
@@ -21,12 +34,20 @@ export default {
     }
   ],
   plugins: [
-    external(),
-    url({ exclude: ['**/*.svg'] }),
-    babel({
-      exclude: 'node_modules/**'
+    json(),
+    nodeResolve({
+      extensions: ['.js', '.jsx', '.ts', '.tsx'],
+      preferBuiltins: false,
+      browser: true
     }),
-    resolve(),
-    commonjs()
+    commonjs({
+      include: /node_modules/
+    }),
+    esbuild({
+      target: 'es2018',
+      jsx: 'automatic',
+      jsxImportSource: 'react'
+    }),
+    terser()
   ]
 }
