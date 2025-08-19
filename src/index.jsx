@@ -139,6 +139,33 @@ const TextForm = styled('div')({
   }
 });
 
+// Launcher styles
+const LauncherFab = styled(Fab)(({ theme, position, size }) => {
+  const positions = {
+    'bottom-right': { bottom: 24, right: 24 },
+    'bottom-left': { bottom: 24, left: 24 },
+    'top-right': { top: 24, right: 24 },
+    'top-left': { top: 24, left: 24 }
+  };
+
+  const sizes = {
+    small: { width: 40, height: 40 },
+    medium: { width: 56, height: 56 },
+    large: { width: 72, height: 72 }
+  };
+
+  return {
+    position: 'fixed',
+    zIndex: theme.zIndex.speedDial,
+    boxShadow: theme.shadows[6],
+    '&:hover': {
+      boxShadow: theme.shadows[8],
+    },
+    ...positions[position],
+    ...sizes[size]
+  };
+});
+
 function SoftPhone({ 
   timelocale,
   setConnectOnStartToLocalStorage,
@@ -153,9 +180,16 @@ function SoftPhone({
   callVolume,
   ringVolume,
   config,
+  builtInLauncher = false,
+  launcherPosition = 'bottom-right',
+  launcherSize = 'medium',
+  launcherColor = 'primary',
 }) {
   const player = useRef(null);
   const ringer = useRef(null);
+  
+  // Built-in launcher state
+  const [launcherOpen, setLauncherOpen] = useState(false);
 
   const defaultSoftPhoneState = {
     displayCalls: [
@@ -888,14 +922,35 @@ function SoftPhone({
       handleCall(event);
     }
   };
-  return (
-    <Box
+  // Handle launcher toggle
+  const handleLauncherToggle = () => {
+    if (builtInLauncher) {
+      setLauncherOpen(!launcherOpen);
+      setSoftPhoneOpen(!launcherOpen);
+    }
+  };
 
-    >
+  // Use built-in launcher state if enabled, otherwise use external control
+  const isOpen = builtInLauncher ? launcherOpen : softPhoneOpen;
+
+  return (
+    <Box>
+      {/* Built-in Launcher Button */}
+      {builtInLauncher && (
+        <LauncherFab
+          color={launcherColor}
+          position={launcherPosition}
+          size={launcherSize}
+          onClick={handleLauncherToggle}
+          aria-label="Toggle Softphone"
+        >
+          {isOpen ? <CloseIcon /> : <PhoneIcon />}
+        </LauncherFab>
+      )}
 
       <DrawerStyled
         anchor="right"
-        open={drawerOpen}
+        open={isOpen}
         variant="persistent"
       >
         <Box sx={{ 
@@ -908,7 +963,7 @@ function SoftPhone({
           <DrawerHeader>
             <Typography variant="subtitle1" fontWeight={500}>Softphone</Typography>
             <IconButton 
-              onClick={() => setSoftPhoneOpen(false)} 
+              onClick={() => builtInLauncher ? setLauncherOpen(false) : setSoftPhoneOpen(false)} 
               data-testid="hide-soft-phone-button" 
               size="large"
               sx={{ 
