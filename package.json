@@ -29,7 +29,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/prinze77/react-softphone.git"
+    "url": "git+https://github.com/chamuridis/react-softphone.git"
   },
   "keywords": [
     "React",
@@ -44,9 +44,9 @@
   "author": "Dionis",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/prinze77/react-softphone/issues"
+    "url": "https://github.com/chamuridis/react-softphone/issues"
   },
-  "homepage": "https://github.com/prinze77/react-softphone#readme",
+  "homepage": "https://github.com/chamuridis/react-softphone#readme",
   "dependencies": {
     "@emotion/react": "^11.11.0",
     "@emotion/styled": "^11.11.0",
@@ -65,7 +65,7 @@
   "sideEffects": false,
   "funding": {
     "type": "github",
-    "url": "https://github.com/sponsors/prinze77"
+    "url": "https://github.com/sponsors/chamuridis"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^26.0.0",

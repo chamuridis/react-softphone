@@ -11,7 +11,6 @@ A modern WebRTC softphone component for React applications with all dependencies
 - 🎯 **Material Design** - Beautiful UI with Material-UI components included
 - 📱 **WebRTC Ready** - Built on JsSIP for reliable VoIP calls
 - ⚛️ **Modern React** - Uses hooks and modern React patterns
-- 🌐 **English Interface** - Clean English-only interface, no i18n overhead
 - 🎨 **Built-in Launcher** - Optional floating launcher button
 - 📞 **Call Management** - Hold, transfer, conference, and attended transfer support
 
@@ -367,7 +366,7 @@ This will show detailed logs for:
 
 ```bash
 # Clone the repository
-git clone https://github.com/prinze77/react-softphone.git
+git clone https://github.com/chamuridis/react-softphone.git
 
 # Install dependencies
 npm install
@@ -385,4 +384,4 @@ npm install ../react-softphone/react-softphone-*.tgz
 
 ## 📄 License
 
-ISC © [prinze77](https://github.com/prinze77)
+ISC © [chamuridis](https://github.com/chamuridis)
