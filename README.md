@@ -4,6 +4,12 @@
 
 A modern WebRTC softphone component for React applications with all dependencies bundled and zero translation dependencies.
 
+## 📱 Interface Preview
+
+![React Softphone Interface](docs/images/softphone-interface.png)
+
+*Modern, clean interface with call controls, settings, and multi-channel support*
+
 ## ✨ Features
 
 - 🚀 **Self-Contained** - All MUI dependencies bundled, no additional installs needed
